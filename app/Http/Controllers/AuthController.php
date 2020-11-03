@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -14,7 +16,7 @@ class AuthController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('auth:api', ['except' => ['login']]);
+        $this->middleware('auth:api', ['except' => ['login', 'register']]);
     }
 
     /**
@@ -33,6 +35,19 @@ class AuthController extends Controller
         return $this->respondWithToken($token);
     }
 
+    public function register(Request $request)
+    {
+
+        User::create([
+            "name" => $request['name'],
+            "email" => $request['email'],
+            "password" => Hash::make($request['password'])
+        ]);
+
+        return $this->login($request->all());
+        // return $request->all();
+    }
+
     /**
      * Get the authenticated User.
      *
@@ -40,6 +55,7 @@ class AuthController extends Controller
      */
     public function me()
     {
+        // return "hi";
         return response()->json(auth()->user());
     }
 
@@ -77,7 +93,8 @@ class AuthController extends Controller
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
-            'expires_in' => auth()->factory()->getTTL() * 60
+            'expires_in' => auth()->factory()->getTTL() * 60,
+            'user' => auth()->user()
         ]);
     }
 }
